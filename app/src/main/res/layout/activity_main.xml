@@ -19,11 +19,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_alignParentTop="true"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="5dp"
             android:layout_weight="1"
             android:background="@color/blue"
             android:padding="10dp"
             >
+            <TextView
+                android:id="@+id/cursorPositionDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/blue"
+                android:textColor="@color/white"
+                android:text="0"
+                android:textSize="20dp"
+                />
+
             <TextView
                 android:id="@+id/expressionDisplay"
                 android:layout_width="match_parent"
@@ -45,11 +55,38 @@
                 android:textSize="20dp"
                 />
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scientific"
+                android:id="@+id/btnScientific"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:textColor="@color/blue"
+                android:textSize="16dp"
+                android:fontFamily="@font/montserrat"
+                />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Standard"
+                android:id="@+id/btnStandard"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:textColor="@color/blue"
+                android:textSize="16dp"
+                />
+
+        </LinearLayout>
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/displayLayout"
-            android:padding="16dp"
+            android:padding="10dp"
             >
 
         <TableRow
@@ -72,8 +109,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
-                android:text="x^2" />
-
+                >
+            </com.example.scientificcalculator.components.CustomButton>
             <com.example.scientificcalculator.components.CustomButton
                 android:id="@+id/btnLeft"
                 android:layout_width="0dp"
@@ -133,7 +170,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
-                android:text="e" />
+                android:text="exp" />
             <com.example.scientificcalculator.components.CustomButton
                 android:id="@+id/btnPi"
                 android:layout_width="0dp"
@@ -324,7 +361,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
-                android:text="5" />
+                android:text="2" />
 
             <com.example.scientificcalculator.components.CustomButton
                 android:id="@+id/btn3"
@@ -332,7 +369,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
-                android:text="6" />
+                android:text="3" />
             <com.example.scientificcalculator.components.CustomButton
                 android:id="@+id/btnPlus"
                 android:layout_width="0dp"

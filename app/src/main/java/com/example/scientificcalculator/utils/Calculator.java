@@ -1,8 +1,32 @@
 package com.example.scientificcalculator.utils;
 
+
+import java.util.ArrayList;
 import java.util.Stack;
+import java.util.function.Function;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Calculator {
+    private static final ArrayList<String> operators = new ArrayList<String>() {{
+        add("+");
+        add("-");
+        add("x");
+        add("/");
+    }};
+        private static final Map<String, Function<Double, Double>> functions = new HashMap<String, Function<Double, Double>>() {{
+            put("sin", Math::sin);
+            put("cos", Math::cos);
+            put("tan", Math::tan);
+            put("log", Math::log);
+            put("exp", Math::exp);
+            put("sqrt", Math::sqrt);
+            put("abs", Math::abs);
+//            put("^", Math::pow);
+        }};
+
+
+
     public static double evaluate(String expression) {
         Stack<Double> operandStack = new Stack<>();
         Stack<Character> operatorStack = new Stack<>();
@@ -20,7 +44,10 @@ public class Calculator {
                 // we need to decrement i because the outer loop will increment it
                 i--;
                 operandStack.push(Double.parseDouble(num.toString()));
-            } else if (c == '(') {
+            }else if(c=='P') {
+                operandStack.push(Math.PI);
+                i++;
+            }else if (c == '(') {
                 operatorStack.push(c);
             } else if (c == ')') {
                 while (operatorStack.peek() != '(') {
@@ -80,13 +107,13 @@ public class Calculator {
     }
 
     private static boolean isOperator(char c) {
-        return c == '+' || c == '-' || c == '*' || c == '/';
+        return operators.contains(String.valueOf(c));
     }
 
     private static int precedence(char c) {
         if (c == '+' || c == '-') {
             return 1;
-        } else if (c == '*' || c == '/') {
+        } else if (c == 'x' || c == '/') {
             return 2;
         }
         return -1;
@@ -98,7 +125,7 @@ public class Calculator {
                 return a + b;
             case '-':
                 return a - b;
-            case '*':
+            case 'x':
                 return a * b;
             case '/':
                 if (b == 0) throw new ArithmeticException("Cannot divide by zero");
@@ -108,8 +135,7 @@ public class Calculator {
     }
 
     private static boolean isFunction(String functionName) {
-        String[] functions = {"cos", "sin", "tan", "log", "exp"};
-        for (String function : functions) {
+        for (String function : functions.keySet()) {
             if (function.equals(functionName)) {
                 return true;
             }
@@ -120,22 +146,14 @@ public class Calculator {
     private static double evaluateExpression(String expression) {
         return evaluate(expression);
     }
-    private static double applyFunction(String functionName, double value) {
-        switch (functionName) {
-            case "cos":
-                return Math.cos(value);
-            case "sin":
-                return Math.sin(value);
-            case "tan":
-                return Math.tan(value);
-            case "log":
-                return Math.log(value);
-            case "exp":
-                return Math.exp(value);
-            default:
-                throw new IllegalArgumentException("Unknown function: " + functionName);
-        }
 
+    private static double applyFunction(String functionName, double value) {
+        Function<Double, Double> function = functions.get(functionName);
+        if (function == null) {
+            throw new IllegalArgumentException("Unknown function: " + functionName);
+        }
+        return function.apply(value);
     }
+
 }
 
