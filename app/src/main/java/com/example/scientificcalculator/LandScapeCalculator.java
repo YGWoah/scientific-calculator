@@ -21,26 +21,36 @@ public class LandScapeCalculator extends AppCompatActivity implements View.OnCli
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        verifyOrientation();
         setContentView(R.layout.activity_land_scape_view);
-        initializeViews();
+
+        initializeListeners();
+    }
+
+    public void verifyOrientation(){
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+            navigateToPortrait();
+        }
     }
 
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.i("Orientationnjnjnjn", String.valueOf(newConfig.orientation));
         if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            Intent intent = new Intent(this, StandardCalculator.class);
-            startActivity(intent);
+            navigateToPortrait();
         }
     }
-    public void initializeViews(){
+    public void navigateToPortrait(){
+        Intent intent = new Intent(this, StandardCalculator.class);
+        startActivity(intent);
+        finish();
+    }
+    public void initializeListeners(){
 
-        // Initialize TextView for display
         resultDisplay = findViewById(R.id.resultDisplay);
         expressionDisplay = findViewById(R.id.expressionDisplay);
 
-        // Set OnClickListener for number buttons
         findViewById(R.id.btn0).setOnClickListener(this);
         findViewById(R.id.btn1).setOnClickListener(this);
         findViewById(R.id.btn2).setOnClickListener(this);
@@ -52,32 +62,26 @@ public class LandScapeCalculator extends AppCompatActivity implements View.OnCli
         findViewById(R.id.btn8).setOnClickListener(this);
         findViewById(R.id.btn9).setOnClickListener(this);
 
-
-//         Set OnClickListener for operation buttons
         findViewById(R.id.btnPlus).setOnClickListener(this::handleOperation);
         findViewById(R.id.btnMinus).setOnClickListener(this::handleOperation);
         findViewById(R.id.btnMultiply).setOnClickListener(this::handleOperation);
         findViewById(R.id.btnDevide).setOnClickListener(this::handleOperation);
         findViewById(R.id.btnDot).setOnClickListener(this::handleOperation);
 
-        // Set OnClickListener for trigonometric function buttons
         findViewById(R.id.btnSin).setOnClickListener(this);
         findViewById(R.id.btnCos).setOnClickListener(this);
         findViewById(R.id.btnTan).setOnClickListener(this);
         findViewById(R.id.btnPi).setOnClickListener(this);
 
-        // Set OnClickListener for exponential function buttons
         findViewById(R.id.btnExp).setOnClickListener(this);
         findViewById(R.id.btnLn).setOnClickListener(this);
         findViewById(R.id.btnLog).setOnClickListener(this);
         findViewById(R.id.btnSqrt).setOnClickListener(this);
 //        findViewById(R.id.btnSquare).setOnClickListener(this);
-
-        // parathanses button
+        findViewById(R.id.btnPower).setOnClickListener(this::handleOperation);
         findViewById(R.id.btnLeftBracket).setOnClickListener(this::handleInput);
         findViewById(R.id.btnRightBracket).setOnClickListener(this::handleInput);
 
-//        //controle button
         findViewById(R.id.btnDel).setOnClickListener(this::handleSupp);
         findViewById(R.id.btnAC).setOnClickListener(this::handleClear);
 
@@ -96,16 +100,11 @@ public class LandScapeCalculator extends AppCompatActivity implements View.OnCli
         expression.setValue(expression.getValue().append(((TextView)v).getText()));
     }
 
-//    public void handleNumber(View view){
-//         Handle the number button click
-//        expression.setValue(expression.getValue().append(((TextView)view).getText()));
-//    }
 
     public void addAns(View view){
         expression.setValue(expression.getValue().append(resultDisplay.getText()));
     }
     public void evaluateExpression(View view){
-        // Handle the equal button click
         try {
             double result = Calculator.evaluate(expression.getValue().toString());
             resultDisplay.setText(String.valueOf(result));
@@ -129,19 +128,16 @@ public class LandScapeCalculator extends AppCompatActivity implements View.OnCli
     }
 
     public void handleSupp(View view){
-        // Handle the delete button click
         if(expression.getValue().length() > 0){
             expression.setValue(expression.getValue().deleteCharAt(expression.getValue().length() - 1));
         }
     }
 
     public void handleClear(View view){
-        // Handle the clear button click
         expression.setValue(new StringBuilder());
     }
 
     public void updateExpression(){
-        // Update the expression
         expressionDisplay.setText(expression.getValue());
     }
 

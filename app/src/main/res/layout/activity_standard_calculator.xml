@@ -68,6 +68,7 @@
                 android:background="@android:color/transparent"
                 android:textColor="@color/blue"
                 android:textSize="16dp"
+
                 android:fontFamily="@font/montserrat"
                 />
             <Button
@@ -97,7 +98,7 @@
             android:text="AC" />
 
             <com.example.scientificcalculator.components.CustomButton
-                android:id="@+id/btnBracket"
+                android:id="@+id/btnParantheses"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"

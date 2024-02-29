@@ -1,11 +1,12 @@
 package com.example.scientificcalculator.utils;
 
-
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.function.Function;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.example.scientificcalculator.utils.Pair;
 
 public class Calculator {
     private static final ArrayList<String> operators = new ArrayList<String>() {{
@@ -13,18 +14,17 @@ public class Calculator {
         add("-");
         add("x");
         add("/");
+        add("^");
     }};
-        private static final Map<String, Function<Double, Double>> functions = new HashMap<String, Function<Double, Double>>() {{
-            put("sin", Math::sin);
-            put("cos", Math::cos);
-            put("tan", Math::tan);
-            put("log", Math::log);
-            put("exp", Math::exp);
-            put("sqrt", Math::sqrt);
-            put("abs", Math::abs);
-//            put("^", Math::pow);
-        }};
-
+    private static final Map<String, Function<Double, Double>> functions = new HashMap<String, Function<Double, Double>>() {{
+        put("sin", Math::sin);
+        put("cos", Math::cos);
+        put("tan", Math::tan);
+        put("log", Math::log);
+        put("exp", Math::exp);
+        put("sqrt", Math::sqrt);
+        put("abs", Math::abs);
+    }};
 
 
     public static double evaluate(String expression) {
@@ -33,21 +33,14 @@ public class Calculator {
 
         for (int i = 0; i < expression.length(); i++) {
             char c = expression.charAt(i);
-            if (c == ' ') {
-                continue;
-            } else if (Character.isDigit(c) || c == '.') {
-                StringBuilder num = new StringBuilder();
-                while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
-                    num.append(expression.charAt(i));
-                    i++;
-                }
-                // we need to decrement i because the outer loop will increment it
-                i--;
-                operandStack.push(Double.parseDouble(num.toString()));
-            }else if(c=='P') {
+            if (Character.isDigit(c) || c == '.') {
+                Pair<Double, Integer> result = parseNumber(expression, i);
+                operandStack.push(result.first);
+                i = result.second;
+            } else if (c == 'P') {
                 operandStack.push(Math.PI);
                 i++;
-            }else if (c == '(') {
+            } else if (c == '(') {
                 operatorStack.push(c);
             } else if (c == ')') {
                 while (operatorStack.peek() != '(') {
@@ -56,45 +49,14 @@ public class Calculator {
                 }
                 operatorStack.pop();
             } else if (isOperator(c)) {
-                while (!operatorStack.isEmpty() && precedence(c) <= precedence(operatorStack.peek())) {
-                    double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
-                    operandStack.push(result);
-                }
+                handleOperator(operatorStack, operandStack, c);
                 operatorStack.push(c);
             } else if (Character.isLetter(c)) {
-                StringBuilder functionName = new StringBuilder();
-                while (i < expression.length() && Character.isLetter(expression.charAt(i))) {
-                    functionName.append(expression.charAt(i));
-                    i++;
-                }
-                i--;
-                if (isFunction(functionName.toString())) {
-                    String expressionInsideFunction ="";
-                    // here we need to skip the function name
-                    int j = i+2;
-                    int openBrackets = 0;
-                    while (j < expression.length()) {
-                        if (expression.charAt(j) == '(') {
-                            openBrackets++;
-                        } else if (expression.charAt(j) == ')') {
-                            if (openBrackets == 0) {
-                                break;
-                            } else {
-                                openBrackets--;
-                            }
-                        }
-                        expressionInsideFunction += expression.charAt(j);
-                        j++;
-                    }
-                    i = j;
-
-                    double result = evaluateExpression(expressionInsideFunction);
-
-                    operandStack.push(applyFunction(functionName.toString(), result));
-
-                } else {
-                    throw new IllegalArgumentException("Unknown function: " + functionName.toString());
-                }
+                String functionName = getFunction(expression, i);
+                i += functionName.length();
+                Pair<Double, Integer> result = evaluateFunction(functionName, expression, i);
+                operandStack.push(result.first);
+                i += result.second;
             }
         }
 
@@ -102,8 +64,75 @@ public class Calculator {
             double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
             operandStack.push(result);
         }
-
         return operandStack.pop();
+    }
+
+    private static void handleOperator(Stack<Character> operatorStack, Stack<Double> operandStack, char operator) {
+        while (!operatorStack.isEmpty() && precedence(operator) <= precedence(operatorStack.peek())) {
+            double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
+            operandStack.push(result);
+        }
+    }
+
+    private static Pair<Double, Integer> evaluateFunction(String functionName, String expression, int startIndex) {
+        validateFunction(functionName);
+
+        Pair<String, Integer> extractedExpression = extractExpressionInsideFunction(expression, startIndex);
+        startIndex = extractedExpression.second;
+
+        double evaluatedResult = evaluateExpression(extractedExpression.first);
+
+        return new Pair<>(evaluatedResult, startIndex);
+    }
+
+    private static void validateFunction(String functionName) {
+        if (!isFunction(functionName)) {
+            throw new IllegalArgumentException("Function " + functionName + " is not supported. Please use a valid function.");
+        }
+    }
+
+    private static Pair<String, Integer> extractExpressionInsideFunction(String expression, int startIndex) {
+        StringBuilder expressionInsideFunction = new StringBuilder();
+        int openBrackets = 0;
+        int j = startIndex;
+
+        while (j < expression.length()) {
+            if (expression.charAt(j) == '(') {
+                openBrackets++;
+            } else if (expression.charAt(j) == ')') {
+                if (openBrackets == 0) {
+                    break;
+                } else {
+                    openBrackets--;
+                }
+            }
+            expressionInsideFunction.append(expression.charAt(j));
+            j++;
+        }
+
+        return new Pair<>(expressionInsideFunction.toString(), j);
+    }
+
+    private static String getFunction(String expression, int startIndex) {
+        StringBuilder functionName = new StringBuilder();
+        int i = startIndex;
+        while (i < expression.length() && Character.isLetter(expression.charAt(i))) {
+            functionName.append(expression.charAt(i));
+            i++;
+        }
+        return functionName.toString();
+    }
+
+    private static Pair<Double, Integer> parseNumber(String expression, int startIndex) {
+        StringBuilder num = new StringBuilder();
+        int i = startIndex;
+        while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
+            num.append(expression.charAt(i));
+            i++;
+        }
+        i--;
+        double number = Double.parseDouble(num.toString());
+        return new Pair<>(number, i);
     }
 
     private static boolean isOperator(char c) {
@@ -130,6 +159,8 @@ public class Calculator {
             case '/':
                 if (b == 0) throw new ArithmeticException("Cannot divide by zero");
                 return a / b;
+            case '^':
+                return Math.pow(a, b);
         }
         return 0;
     }
@@ -147,13 +178,4 @@ public class Calculator {
         return evaluate(expression);
     }
 
-    private static double applyFunction(String functionName, double value) {
-        Function<Double, Double> function = functions.get(functionName);
-        if (function == null) {
-            throw new IllegalArgumentException("Unknown function: " + functionName);
-        }
-        return function.apply(value);
-    }
-
 }
-
