@@ -1,5 +1,7 @@
 package com.example.scientificcalculator.utils;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.function.Function;
@@ -25,6 +27,7 @@ public class Calculator {
         put("sqrt", Math::sqrt);
         put("abs", Math::abs);
     }};
+    private static int i;
 
 
     public static double evaluate(String expression) {
@@ -34,37 +37,36 @@ public class Calculator {
         for (int i = 0; i < expression.length(); i++) {
             char c = expression.charAt(i);
             if (Character.isDigit(c) || c == '.') {
-                Pair<Double, Integer> result = parseNumber(expression, i);
-                operandStack.push(result.first);
-                i = result.second;
+                i= parseNumber(expression, i, operandStack);
             } else if (c == 'P') {
                 operandStack.push(Math.PI);
                 i++;
             } else if (c == '(') {
                 operatorStack.push(c);
             } else if (c == ')') {
-                while (operatorStack.peek() != '(') {
-                    double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
-                    operandStack.push(result);
-                }
-                operatorStack.pop();
+                evaluateInsideParentheses(operatorStack, operandStack);
             } else if (isOperator(c)) {
                 handleOperator(operatorStack, operandStack, c);
                 operatorStack.push(c);
             } else if (Character.isLetter(c)) {
-                String functionName = getFunction(expression, i);
-                i += functionName.length();
-                Pair<Double, Integer> result = evaluateFunction(functionName, expression, i);
-                operandStack.push(result.first);
-                i += result.second;
+                i = handleFucntion(expression, i, operandStack);
             }
         }
 
+        evaluateRemainingExpression(operatorStack, operandStack);
+        return operandStack.pop();
+    }
+    private static void evaluateRemainingExpression(Stack<Character> operatorStack, Stack<Double> operandStack) {
         while (!operatorStack.isEmpty()) {
             double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
             operandStack.push(result);
         }
-        return operandStack.pop();
+    }
+    private static int handleFucntion(String expression, int i, Stack<Double> operandStack) {
+        String functionName = getFunction(expression, i);
+        i += functionName.length();
+        i = evaluateFunction(functionName, expression, i, operandStack);
+        return i;
     }
 
     private static void handleOperator(Stack<Character> operatorStack, Stack<Double> operandStack, char operator) {
@@ -73,16 +75,21 @@ public class Calculator {
             operandStack.push(result);
         }
     }
-
-    private static Pair<Double, Integer> evaluateFunction(String functionName, String expression, int startIndex) {
+    private static void evaluateInsideParentheses(Stack<Character> operatorStack, Stack<Double> operandStack) {
+        while (operatorStack.peek() != '(') {
+            double result = performOperation(operatorStack.pop(), operandStack.pop(), operandStack.pop());
+            operandStack.push(result);
+        }
+        operatorStack.pop();
+    }
+    private static Integer evaluateFunction(String functionName, String expression, int startIndex,Stack<Double> operandStack) {
         validateFunction(functionName);
-
         Pair<String, Integer> extractedExpression = extractExpressionInsideFunction(expression, startIndex);
         startIndex = extractedExpression.second;
-
         double evaluatedResult = evaluateExpression(extractedExpression.first);
-
-        return new Pair<>(evaluatedResult, startIndex);
+        Double resultEvaluated = functions.get(functionName).apply(evaluatedResult);
+        operandStack.push(resultEvaluated);
+        return startIndex;
     }
 
     private static void validateFunction(String functionName) {
@@ -90,26 +97,22 @@ public class Calculator {
             throw new IllegalArgumentException("Function " + functionName + " is not supported. Please use a valid function.");
         }
     }
-
     private static Pair<String, Integer> extractExpressionInsideFunction(String expression, int startIndex) {
         StringBuilder expressionInsideFunction = new StringBuilder();
         int openBrackets = 0;
         int j = startIndex;
 
         while (j < expression.length()) {
+            expressionInsideFunction.append(expression.charAt(j));
             if (expression.charAt(j) == '(') {
                 openBrackets++;
             } else if (expression.charAt(j) == ')') {
-                if (openBrackets == 0) {
+                openBrackets--;
+                if (openBrackets == 0)
                     break;
-                } else {
-                    openBrackets--;
-                }
             }
-            expressionInsideFunction.append(expression.charAt(j));
             j++;
         }
-
         return new Pair<>(expressionInsideFunction.toString(), j);
     }
 
@@ -123,7 +126,7 @@ public class Calculator {
         return functionName.toString();
     }
 
-    private static Pair<Double, Integer> parseNumber(String expression, int startIndex) {
+    private static Integer parseNumber(String expression, int startIndex, Stack<Double> operandStack) {
         StringBuilder num = new StringBuilder();
         int i = startIndex;
         while (i < expression.length() && (Character.isDigit(expression.charAt(i)) || expression.charAt(i) == '.')) {
@@ -132,10 +135,11 @@ public class Calculator {
         }
         i--;
         double number = Double.parseDouble(num.toString());
-        return new Pair<>(number, i);
+        operandStack.push(number);
+        return i;
     }
 
-    private static boolean isOperator(char c) {
+    public static boolean isOperator(char c) {
         return operators.contains(String.valueOf(c));
     }
 
